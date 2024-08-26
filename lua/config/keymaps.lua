@@ -55,13 +55,6 @@ local nmappings = {
   },
   { from = "c,.", to = "c%" },
 
-  -- Actions
-  {
-    from = "jk",
-    to = "<ESC>",
-    mode = mode_i,
-  },
-
   -- Useful actions
   {
     from = ",.",
@@ -133,3 +126,23 @@ vim.keymap.set("n", "<leader>q", function()
     run_vim_shortcut([[<C-w>j:q<CR>]])
   end
 end, { noremap = true, silent = true })
+
+local ls = require("luasnip")
+
+vim.keymap.set("i", "<CR>", function()
+  if ls.expandable() then
+    ls.expand()
+  else
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<CR>", true, false, true), "n", false)
+  end
+end, { noremap = true, silent = true })
+
+vim.keymap.set({ "i", "s" }, "<c-n>", function()
+  ls.jump(-1)
+end, { silent = true })
+
+vim.keymap.set({ "i", "s" }, "<c-h>", function()
+  if ls.choice_active() then
+    ls.change_choice(1)
+  end
+end, { silent = true })
