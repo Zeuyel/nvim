@@ -2,16 +2,32 @@
 -- Default autocmds that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/autocmds.lua
 -- Add any additional autocmds here
 -- Make cursor always centered on the screen by defaults
-
--- Make cursor always centered on the screen by default
 if not vim.g.noalwayscenter then
-  -- Calculate proper scrolloff
+  -- Function to calculate scrolloff
   local function set_scrolloff()
-    vim.opt.scrolloff = math.floor(vim.api.nvim_win_get_height(0) / 2) + 1
+    local win_height = vim.api.nvim_win_get_height(0)
+    local line_count = vim.api.nvim_buf_line_count(0)
+    local cursor_line = vim.fn.line(".")
+
+    -- Check if there are enough lines above and below to center the cursor
+    if cursor_line > win_height / 2 and (line_count - cursor_line) > win_height / 2 then
+      vim.opt.scrolloff = math.floor(win_height / 2) + 1
+    else
+      vim.opt.scrolloff = 0 -- Reset scrolloff if there aren't enough lines
+    end
   end
 
   local function set_scrolloff_insert()
-    vim.opt.scrolloff = math.floor(vim.api.nvim_win_get_height(0) / 2)
+    local win_height = vim.api.nvim_win_get_height(0)
+    local line_count = vim.api.nvim_buf_line_count(0)
+    local cursor_line = vim.fn.line(".")
+
+    -- Check if there are enough lines above and below to center the cursor
+    if cursor_line > win_height / 2 and (line_count - cursor_line) > win_height / 2 then
+      vim.opt.scrolloff = math.floor(win_height / 2)
+    else
+      vim.opt.scrolloff = 0 -- Reset scrolloff if there aren't enough lines
+    end
   end
 
   -- Autocommand for entering and resizing windows, leaving insert mode
