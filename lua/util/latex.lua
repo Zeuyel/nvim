@@ -1,71 +1,51 @@
 local M = {}
 
-local MATH_NODES = {
-  displayed_equation = true,
-  inline_formula = true,
-  math_environment = true,
-}
+-- Luasnip node
+local ls = require("luasnip")
+local sn = ls.snippet_node
+local i = ls.insert_node
 
-local ts_utils = require("nvim-treesitter.ts_utils")
-
-M.in_env = function(env)
-  local node = ts_utils.get_node_at_cursor()
-  local bufnr = vim.api.nvim_get_current_buf()
-  while node do
-    if node:type() == "generic_environment" then
-      local begin = node:child(0)
-      local name = begin:field("name")
-      if name[1] and vim.treesitter.get_node_text(name[1], bufnr, nil) == "{" .. env .. "}" then
-        return true
-      end
-    end
-    node = node:parent()
+function M.get_visual(args, parent)
+  if #parent.snippet.env.LS_SELECT_RAW > 0 then
+    return sn(nil, i(1, parent.snippet.env.LS_SELECT_RAW))
+  else
+    return sn(nil, i(1, ""))
   end
-  return false
 end
 
--- M.in_text = function()
---   local node = ts_utils.get_node_at_cursor()
---   while node do
---     if node:type() == "text_mode" then
---       return true
---     elseif MATH_NODES[node:type()] then
---       return false
---     end
---     node = node:parent()
---   end
---   return true
--- end
---
--- M.in_mathzone = function()
---   return not M.in_text()
--- end
+--for latex condition with vimtex
 
 M.in_mathzone = function()
-  return vim.api.nvim_eval("vimtex#syntax#in_mathzone()") == 1
+  -- The `in_mathzone` function requires the VimTeX plugin
+  return vim.fn["vimtex#syntax#in_mathzone"]() == 1
 end
 
+M.in_mathzone = function() -- math context detection
+  return vim.fn["vimtex#syntax#in_mathzone"]() == 1
+end
 M.in_text = function()
   return not M.in_mathzone()
 end
-
-M.in_item = function()
-  return M.in_env("itemize") or M.in_env("enumerate")
+M.in_comment = function() -- comment detection
+  return vim.fn["vimtex#syntax#in_comment"]() == 1
 end
-M.in_bib = function()
-  return M.in_env("thebibliography")
+M.in_env = function(name) -- generic environment detection
+  local is_inside = vim.fn["vimtex#env#is_inside"](name)
+  return (is_inside[1] > 0 and is_inside[2] > 0)
 end
-M.in_tikz = function()
+-- A few concrete environments---adapt as needed
+M.in_equation = function() -- equation environment detection
+  return M.in_env("equation")
+end
+M.in_itemize = function() -- itemize environment detection
+  return M.in_env("itemize")
+end
+M.in_tikz = function() -- TikZ picture environment detection
   return M.in_env("tikzpicture")
 end
-M.in_quantikz = function()
-  return M.in_env("quantikz")
-end
-M.in_algo = function()
-  return M.in_env("algorithmic")
-end
 
--- For markdown
+-- For markdown with nvim-treesitter
+local ts_utils = require("nvim-treesitter.ts_utils")
 M.in_latex = function()
   local node = ts_utils.get_node_at_cursor()
   while node do
@@ -79,32 +59,8 @@ M.in_latex = function()
   return false
 end
 
-M.clean = function()
-  local current_dir = vim.fn.expand("%:p:h")
-  local file_types = { "aux", "log", "out", "fls", "fdb_latexmk", "bcf", "run.xml", "toc", "DS_Store", "bak*", "dvi" }
-  for _, file_type in ipairs(file_types) do
-    local command = "rm " .. current_dir .. "/*." .. file_type
-    vim.api.nvim_call_function("system", { command })
-  end
-end
-
-M.format = function()
-  local current_file = vim.fn.expand("%:p")
-  local latexindent = "latexindent -g /dev/null " .. current_file .. " -wd -l ~/Documents/Latex/latexindent.yaml"
-  local build = "pdflatex " .. current_file
-  vim.api.nvim_call_function("system", { build })
-  vim.cmd("w")
-  M.clean()
-  vim.api.nvim_call_function("system", { latexindent })
-  vim.cmd("e")
-  vim.cmd("normal! zz")
-  -- vim.cmd("TexlabForward")
-end
-
-M.sympy_calc = function()
-  local selected_text = vim.fn.getreg("v")
-  print(selected_text)
-  vim.api.nvim_out_write(selected_text)
+M.in_lineBegin = function()
+  return require("luasnip.extras.expand_conditions").line_begin
 end
 
 return M

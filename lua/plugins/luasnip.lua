@@ -42,12 +42,5 @@ return {
       --   },
       -- })
     end,
-    keys = function(_, keys)
-      keys[#keys + 1] = {
-        "<C-N>",
-        "<Plug>luasnip-next-choice",
-      }
-      return keys
-    end,
   },
 }

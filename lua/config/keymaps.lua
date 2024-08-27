@@ -127,20 +127,8 @@ vim.keymap.set("n", "<leader>q", function()
   end
 end, { noremap = true, silent = true })
 
+-- for luasnip
 local ls = require("luasnip")
-
-vim.keymap.set("i", "<CR>", function()
-  if ls.expandable() then
-    ls.expand()
-  else
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<CR>", true, false, true), "n", false)
-  end
-end, { noremap = true, silent = true })
-
-vim.keymap.set({ "i", "s" }, "<c-n>", function()
-  ls.jump(-1)
-end, { silent = true })
-
 vim.keymap.set({ "i", "s" }, "<c-h>", function()
   if ls.choice_active() then
     ls.change_choice(1)
