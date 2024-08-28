@@ -127,6 +127,8 @@ vim.keymap.set("n", "<leader>q", function()
   end
 end, { noremap = true, silent = true })
 
+vim.keymap.set({ "i" }, "<CR>", "<CR><c-o>zz", { noremap = true, silent = true })
+
 -- for luasnip
 local ls = require("luasnip")
 vim.keymap.set({ "i", "s" }, "<c-h>", function()
